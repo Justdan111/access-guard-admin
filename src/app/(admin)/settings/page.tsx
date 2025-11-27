@@ -34,7 +34,6 @@ export default function AdminSettingsPage() {
     <ProtectedRoute requiredRole="admin">
       <div className="min-h-screen bg-background">
           <main className="flex-1 overflow-auto">
-            <div className="p-8">
               <div className="mb-8">
                 <h1 className="text-3xl font-bold text-foreground">Admin Settings</h1>
                 <p className="text-muted-foreground mt-2">Configure security policies and system settings</p>
@@ -169,7 +168,6 @@ export default function AdminSettingsPage() {
                   Save Settings
                 </button>
               </div>
-            </div>
           </main>
         </div>
     </ProtectedRoute>
