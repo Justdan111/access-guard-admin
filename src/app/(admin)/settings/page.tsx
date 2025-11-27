@@ -16,20 +16,19 @@ export default function AdminSettingsPage() {
     notificationsEnabled: true,
   })
 
-  const handleToggle = (key: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }))
-  }
+ const handleToggle = (key: keyof typeof settings) => {
+  setSettings((prev) => ({
+    ...prev,
+    [key]: !prev[key],
+  }))
+}
 
-  const handleChange = (key: string, value: number | string) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: value,
-    }))
-  }
-
+const handleChange = (key: keyof typeof settings, value: number | string) => {
+  setSettings((prev) => ({
+    ...prev,
+    [key]: value,
+  }))
+}
   return (
     <ProtectedRoute requiredRole="admin">
       <div className="min-h-screen bg-background">
