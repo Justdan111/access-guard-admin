@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Clock, Download, Filter } from "lucide-react";
 import { ProtectedRoute } from "@/components/protected-route";
+import { BlockedModal } from "@/components/dashboard/risk-dialog";
 import api from "@/lib/api";
 
 interface BankingTransaction {
@@ -24,6 +25,16 @@ interface BankingTransactionsResponse {
   totalIncome: number;
   totalOutgoings: number;
   netFlow: number;
+}
+
+interface SecurityBlockedResponse {
+  success: false;
+  message: string;
+  details: {
+    message: string;
+    riskScore: number; // 0-1 scale
+    contactSupport: boolean;
+  };
 }
 
 // Hardcoded risk scores for transactions
@@ -97,21 +108,41 @@ export default function TransactionsPage() {
   const [filterType, setFilterType] = useState<"all" | "transfer">("all");
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [searchQuery, setSearchQuery] = useState("");
+  const [securityBlocked, setSecurityBlocked] = useState(false);
+  const [riskScore, setRiskScore] = useState(0);
+  const [riskFactors, setRiskFactors] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
 
     const fetchTransactions = async () => {
       try {
-        const result = await api.get<BankingTransactionsResponse>(
-          `/api/banking/transactions`
-        );
+        const result = await api.get<
+          BankingTransactionsResponse | SecurityBlockedResponse
+        >(`/api/banking/transactions`);
 
         if (!result.ok) {
+          // Check if it's a security-blocked response
+          if (
+            result.status === 403 &&
+            "details" in result.data &&
+            result.data.details
+          ) {
+            const securityResponse = result.data as SecurityBlockedResponse;
+            const { riskScore: score, message } = securityResponse.details;
+            setRiskScore(score * 100); // Convert to 0-100 scale
+            setRiskFactors([
+              message || "High-risk activity detected - access blocked",
+            ]);
+            setSecurityBlocked(true);
+            setIsLoading(false);
+            return;
+          }
           throw new Error(result.error || "Failed to fetch transactions");
         }
 
-        setApiData(result.data);
+        // Safe to cast as BankingTransactionsResponse if ok
+        setApiData(result.data as BankingTransactionsResponse);
       } catch (error) {
         console.error("Failed to fetch transactions:", error);
         setApiData(null);
@@ -155,6 +186,16 @@ export default function TransactionsPage() {
 
   return (
     <ProtectedRoute requiredRole="user">
+      <BlockedModal
+        isOpen={securityBlocked}
+        riskScore={riskScore}
+        factors={riskFactors}
+        onClose={() => {
+          setSecurityBlocked(false);
+          setRiskScore(0);
+          setRiskFactors([]);
+        }}
+      />
       <div className="min-h-screen bg-background">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Transactions</h1>

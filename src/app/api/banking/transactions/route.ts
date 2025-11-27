@@ -1,25 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-interface BankingTransaction {
-  id: number;
-  from: string;
-  to: string;
-  amount: number;
-  status: "completed" | "pending";
-  type: string;
-  time: string;
-}
-
-interface BankingTransactionsResponse {
-  app: string;
-  user: string;
-  transactions: BankingTransaction[];
-  totalTransactions: number;
-  totalIncome: number;
-  totalOutgoings: number;
-  netFlow: number;
-}
-
 export async function GET(request: NextRequest) {
   try {
     const backendUrl =
@@ -30,21 +10,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Forward device context headers from client
-    const devicePosture = request.headers.get("x-device-posture");
-    const accessContext = request.headers.get("x-access-context");
+    // Use hardcoded risky data to simulate high-risk scenario
+    const devicePosture = JSON.stringify({
+      diskEncrypted: false,
+      antivirus: false,
+      isJailbroken: true,
+    });
+
+    const accessContext = JSON.stringify({
+      impossibleTravel: true,
+      country: "RU",
+      isVPN: true,
+      isTor: true,
+    });
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       Authorization: token,
+      "x-device-posture": devicePosture,
+      "x-access-context": accessContext,
     };
-
-    if (devicePosture) {
-      headers["x-device-posture"] = devicePosture;
-    }
-    if (accessContext) {
-      headers["x-access-context"] = accessContext;
-    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -58,13 +43,11 @@ export async function GET(request: NextRequest) {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      return NextResponse.json(
-        { error: "Failed to fetch transactions from backend" },
-        { status: response.status }
-      );
+      const errorData = await response.json();
+      return NextResponse.json(errorData, { status: response.status });
     }
 
-    const data: BankingTransactionsResponse = await response.json();
+    const data = await response.json();
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error("Banking transactions error:", error);
