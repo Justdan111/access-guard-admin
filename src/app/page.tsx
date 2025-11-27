@@ -1,65 +1,105 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+
+export default function RootPage() {
+  const router = useRouter()
+  const [isRedirecting, setIsRedirecting] = useState(false)
+
+  const handleLoginRedirect = () => {
+    setIsRedirecting(true)
+    router.push("/login")
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen bg-background text-foreground flex flex-col">
+      {/* Header Navigation */}
+      <header className="bg-primary text-primary-foreground shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-primary-foreground rounded-lg flex items-center justify-center">
+              <span className="font-bold text-primary text-lg">ZT</span>
+            </div>
+            <h1 className="text-2xl font-bold">SecureBank</h1>
+          </div>
+          <button
+            onClick={handleLoginRedirect}
+            disabled={isRedirecting}
+            className="px-6 py-2 bg-primary-foreground text-primary font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {isRedirecting ? "Redirecting..." : "Login"}
+          </button>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <div className="flex-1 flex items-center justify-center px-4 py-20">
+        <div className="max-w-2xl text-center">
+          <h2 className="text-5xl font-bold mb-6 text-balance">Enterprise Banking with Zero-Trust Security</h2>
+          <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+            Protect your assets with our advanced zero-trust security platform. Real-time device posture monitoring,
+            risk scoring, and adaptive authentication for corporate banking.
           </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={handleLoginRedirect}
+              className="px-8 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Get Started
+            </button>
+            <a
+              href="#features"
+              className="px-8 py-3 border-2 border-primary text-primary font-semibold rounded-lg hover:bg-primary hover:text-primary-foreground transition-colors"
+            >
+              Learn More
+            </a>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      {/* Features Section */}
+      <section id="features" className="bg-card border-t border-border">
+        <div className="max-w-7xl mx-auto px-4 py-20">
+          <h3 className="text-3xl font-bold mb-12 text-center">Security Features</h3>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Real-Time Risk Scoring",
+                description:
+                  "Continuous device posture monitoring and adaptive risk assessment based on user behavior and context.",
+              },
+              {
+                title: "Zero-Trust Architecture",
+                description:
+                  "Never trust, always verify. Every access request is authenticated and authorized independently.",
+              },
+              {
+                title: "Device Posture Analysis",
+                description:
+                  "Analyze device compliance, network status, and security posture to ensure secure transactions.",
+              },
+            ].map((feature, i) => (
+              <div
+                key={i}
+                className="p-6 bg-background rounded-lg border border-border hover:shadow-lg transition-shadow"
+              >
+                <h4 className="font-bold text-lg mb-3">{feature.title}</h4>
+                <p className="text-muted-foreground">{feature.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </main>
-    </div>
-  );
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-primary text-primary-foreground mt-auto">
+        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-sm opacity-90">
+          <p>© 2025 SecureBank. Zero-Trust Banking Platform. All rights reserved.</p>
+        </div>
+      </footer>
+    </main>
+  )
 }

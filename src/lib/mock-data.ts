@@ -1,0 +1,137 @@
+import { AccessLog, DevicePosture, Transaction, User } from "./types"
+
+
+export const mockUsers: User[] = [
+  {
+    id: "user-1",
+    email: "john.doe@company.com",
+    name: "John Doe",
+    role: "user",
+    department: "Finance",
+    deviceId: "device-001",
+    createdAt: "2024-01-15",
+  },
+  {
+    id: "user-2",
+    email: "jane.smith@company.com",
+    name: "Jane Smith",
+    role: "admin",
+    department: "Security",
+    deviceId: "device-002",
+    createdAt: "2024-01-10",
+  },
+  {
+    id: "user-3",
+    email: "robert.johnson@company.com",
+    name: "Robert Johnson",
+    role: "user",
+    department: "Operations",
+    deviceId: "device-003",
+    createdAt: "2024-02-01",
+  },
+]
+
+export const mockDevicePostures: DevicePosture[] = [
+  {
+    deviceId: "device-001",
+    osType: "macos",
+    osVersion: "14.2.1",
+    firewallEnabled: true,
+    antivirusEnabled: true,
+    diskEncryptionEnabled: true,
+    lastUpdate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    complianceScore: 95,
+    riskLevel: "low",
+  },
+  {
+    deviceId: "device-002",
+    osType: "windows",
+    osVersion: "11 Pro",
+    firewallEnabled: true,
+    antivirusEnabled: true,
+    diskEncryptionEnabled: true,
+    lastUpdate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    complianceScore: 98,
+    riskLevel: "low",
+  },
+  {
+    deviceId: "device-003",
+    osType: "linux",
+    osVersion: "Ubuntu 22.04",
+    firewallEnabled: false,
+    antivirusEnabled: false,
+    diskEncryptionEnabled: true,
+    lastUpdate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    complianceScore: 70,
+    riskLevel: "medium",
+  },
+]
+
+export const mockTransactions: Transaction[] = [
+  {
+    id: "tx-001",
+    userId: "user-1",
+    amount: 15000,
+    currency: "USD",
+    type: "transfer",
+    recipient: "Operations Account",
+    status: "completed",
+    riskScore: 12,
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "tx-002",
+    userId: "user-1",
+    amount: 5200,
+    currency: "USD",
+    type: "debit",
+    recipient: "Vendor Payments",
+    status: "completed",
+    riskScore: 8,
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "tx-003",
+    userId: "user-1",
+    amount: 25000,
+    currency: "USD",
+    type: "transfer",
+    recipient: "International Wire",
+    status: "pending",
+    riskScore: 45,
+    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+  },
+]
+
+export const mockAccessLogs: AccessLog[] = [
+  {
+    id: "log-001",
+    userId: "user-1",
+    action: "LOGIN",
+    resource: "Dashboard",
+    status: "success",
+    riskScore: 5,
+    deviceId: "device-001",
+    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "log-002",
+    userId: "user-2",
+    action: "VIEW_ADMIN_DASHBOARD",
+    resource: "Admin Panel",
+    status: "success",
+    riskScore: 3,
+    deviceId: "device-002",
+    timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "log-003",
+    userId: "user-3",
+    action: "LOGIN",
+    resource: "Dashboard",
+    status: "denied",
+    riskScore: 78,
+    deviceId: "device-003",
+    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+  },
+]
