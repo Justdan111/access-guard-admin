@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button"
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: TrendingUp, label: "Transactions", href: "/dashboard/transactions" },
-  { icon: Users, label: "HR Portal", href: "/dashboard/hr" },
-  { icon: Settings, label: "Settings", href: "/dashboard/settings" },
+  { icon: TrendingUp, label: "Transactions", href: "/transactions" },
+  { icon: Users, label: "HR Portal", href: "/hr" },
+  { icon: Settings, label: "Settings", href: "/user-settings" },
 ]
 
 interface DashboardNavProps {

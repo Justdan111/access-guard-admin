@@ -4,12 +4,24 @@ import { useAuth } from "@/hooks/use-auth"
 import { useRouter, usePathname } from "next/navigation"
 import { LogOut, Bell, User } from "lucide-react"
 import { useState } from "react"
+import { useEffect } from "react"
+import { BlockedModal } from "@/components/dashboard/risk-dialog"
+
+type Assessment = {
+  userId: string
+  deviceId: string
+  riskScore: number
+  riskLevel: "low" | "medium" | "high" | "critical"
+  factors: Array<{ name: string; description: string }>
+}
 
 export function DashboardHeader() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [showMenu, setShowMenu] = useState(false)
+  const [assessment, setAssessment] = useState<Assessment | null>(null)
+  const [showRiskModal, setShowRiskModal] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -27,6 +39,51 @@ export function DashboardHeader() {
       .split("-")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ")
+  }
+
+  // Fetch risk assessment and show modal for medium/high
+  useEffect(() => {
+    if (!user) return
+
+    let isMounted = true
+
+    const fetchAssessment = async () => {
+      try {
+        const resp = await fetch('/api/risk-assessment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id }),
+        })
+
+        if (!resp.ok) return
+        const data: Assessment = await resp.json()
+        if (!isMounted) return
+
+        setAssessment(data)
+        if (data.riskLevel === 'medium' || data.riskLevel === 'high') {
+          setShowRiskModal(true)
+        }
+      } catch (err) {
+        console.error('Failed to fetch assessment', err)
+      }
+    }
+
+    fetchAssessment()
+
+    return () => {
+      isMounted = false
+    }
+  }, [user])
+
+  const handleModalClose = () => {
+    // If the device is high risk, sign the user out and redirect to login
+    if (assessment?.riskLevel === 'high') {
+      logout()
+      router.push('/login')
+      return
+    }
+
+    setShowRiskModal(false)
   }
 
   return (
@@ -91,6 +148,17 @@ export function DashboardHeader() {
           </div>
         </div>
       </div>
+      {/* Risk dialog (shown for medium/high risk) */}
+      <BlockedModal
+        isOpen={showRiskModal}
+        riskScore={assessment?.riskScore ?? 0}
+        factors={
+          assessment?.factors
+            ? assessment.factors.map((f) => `${f.name}: ${f.description}`)
+            : []
+        }
+        onClose={handleModalClose}
+      />
     </header>
   )
 }
