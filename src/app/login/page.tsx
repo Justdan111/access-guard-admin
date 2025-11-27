@@ -5,6 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
+import { collectDeviceContext } from "@/lib/device-context"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -34,6 +35,16 @@ export default function LoginPage() {
       const authData = await response.json()
       localStorage.setItem("auth_token", authData.token)
       localStorage.setItem("user", JSON.stringify(authData.user))
+
+      // Collect and store device context during login
+      console.log("🔐 Login successful, collecting device context...")
+      try {
+        await collectDeviceContext()
+        console.log("✅ Device context collected and stored")
+      } catch (contextError) {
+        console.warn("⚠️ Failed to collect device context:", contextError)
+        // Continue with login even if context collection fails
+      }
 
       // Redirect based on role
       if (authData.user.role === "admin") {

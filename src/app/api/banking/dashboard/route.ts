@@ -12,6 +12,34 @@ export async function GET(request: Request) {
       });
     }
 
+    // Extract device context from headers
+    const devicePostureHeader = request.headers.get("x-device-posture");
+    const accessContextHeader = request.headers.get("x-access-context");
+
+    let parsedDevicePosture: unknown = null;
+    let parsedAccessContext: unknown = null;
+
+    if (devicePostureHeader) {
+      try {
+        parsedDevicePosture = JSON.parse(devicePostureHeader);
+      } catch (e) {
+        console.warn("Failed to parse device posture header:", e);
+      }
+    }
+
+    if (accessContextHeader) {
+      try {
+        parsedAccessContext = JSON.parse(accessContextHeader);
+      } catch (e) {
+        console.warn("Failed to parse access context header:", e);
+      }
+    }
+
+    console.log("📱 Device Context Received:", {
+      devicePosture: parsedDevicePosture,
+      accessContext: parsedAccessContext,
+    });
+
     // Forward to upstream with Authorization header
     const upstream = await fetch(
       "https://acessguard.onrender.com/api/banking/dashboard",
@@ -33,6 +61,15 @@ export async function GET(request: Request) {
       data = { message: text };
     }
 
+    // Add device context to response
+    const responseData = {
+      ...data,
+      deviceContext: {
+        devicePosture: parsedDevicePosture,
+        accessContext: parsedAccessContext,
+      },
+    };
+
     // Proxy any Set-Cookie (sanitize Domain) and return JSON body
     const resHeaders = new Headers({ "Content-Type": "application/json" });
     const setCookie = upstream.headers.get("set-cookie");
@@ -41,11 +78,11 @@ export async function GET(request: Request) {
       resHeaders.set("Set-Cookie", sanitized);
     }
 
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify(responseData), {
       status: upstream.status,
       headers: resHeaders,
     });
-  } catch (err) {
+  } catch {
     return new Response(JSON.stringify({ error: "Dashboard proxy failed" }), {
       status: 502,
       headers: { "Content-Type": "application/json" },

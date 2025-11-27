@@ -4,23 +4,18 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // 1. Log the attempt for debugging
     console.log("Proxying signup request to backend...");
 
-    // 2. FIXED URL: The backend mounts authRouter at "/auth", NOT "/api/auth"
-    // Trying to access /api/auth triggers the zeroTrustGuard on /api, causing 401
     const upstreamUrl = "https://acessguard.onrender.com/auth/signup";
 
     const upstream = await fetch(upstreamUrl, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        // Do NOT pass Authorization headers here for signup/login
       },
       body: JSON.stringify(body),
     });
 
-    // 3. Handle non-JSON responses from backend (e.g., 404 HTML pages or 500 errors)
     const contentType = upstream.headers.get("content-type");
     let data;
     
@@ -35,15 +30,30 @@ export async function POST(req: Request) {
       });
     }
 
-    // 4. Return the response exactly as received
+    // ✅ FIX: Set the auth_token cookie if signup was successful
+    const resHeaders = new Headers({ "Content-Type": "application/json" });
+    
+    if (upstream.ok && data.token) {
+      // Set cookie with security flags
+      resHeaders.set(
+        "Set-Cookie",
+        `auth_token=${data.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}${
+          process.env.NODE_ENV === "production" ? "; Secure" : ""
+        }`
+      );
+      console.log("✅ Auth token cookie set successfully");
+    }
+
     return new Response(JSON.stringify(data), {
       status: upstream.status,
-      headers: { "Content-Type": "application/json" },
+      headers: resHeaders,
     });
 
   } catch (err) {
-    console.error("Signup Proxy Error:", err);
-    return new Response(JSON.stringify({ error: "Internal Proxy Error" }), {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error("❌ Signup Proxy Error:", errorMessage);
+    console.error("Full error:", err);
+    return new Response(JSON.stringify({ error: "Internal Proxy Error", details: errorMessage }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });

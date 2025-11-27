@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Eye, EyeOff, ShieldCheck } from "lucide-react"
+import { collectDeviceContext } from "@/lib/device-context"
 
 export default function SignupPage() {
     const router = useRouter()
@@ -81,6 +82,16 @@ export default function SignupPage() {
       // Store token and user data just like login
       localStorage.setItem("auth_token", authData.token)
       localStorage.setItem("user", JSON.stringify(authData.user))
+
+      // Collect and store device context during signup
+      console.log("🔐 Signup successful, collecting device context...")
+      try {
+        await collectDeviceContext()
+        console.log("✅ Device context collected and stored")
+      } catch (contextError) {
+        console.warn("⚠️ Failed to collect device context:", contextError)
+        // Continue with signup even if context collection fails
+      }
 
       // Redirect to dashboard (assuming new users aren't admins)
       router.push("/dashboard")

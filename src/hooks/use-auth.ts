@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { User } from "@/lib/types";
+import { clearDeviceContext } from "@/lib/device-context";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -45,6 +46,7 @@ export function useAuth() {
   const logout = () => {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user");
+    clearDeviceContext();
     setUser(null);
     setToken(null);
     setIsAuthenticated(false);
