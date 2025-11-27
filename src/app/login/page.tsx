@@ -1,52 +1,63 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
+import { initializeDeviceContext } from "@/lib/auth-context";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Login failed")
+        const data = await response.json();
+        throw new Error(data.error || "Login failed");
       }
 
-      const authData = await response.json()
-      localStorage.setItem("auth_token", authData.token)
-      localStorage.setItem("user", JSON.stringify(authData.user))
+      const authData = await response.json();
+      localStorage.setItem("auth_token", authData.token);
+      localStorage.setItem("user", JSON.stringify(authData.user));
+
+      // Initialize device context for security headers
+      console.log("📱 Initializing device context...");
+      try {
+        await initializeDeviceContext();
+        console.log("✅ Device context initialized successfully");
+      } catch (contextError) {
+        console.warn("⚠️ Failed to initialize device context:", contextError);
+        // Continue with login even if device context initialization fails
+      }
 
       // Redirect based on role
       if (authData.user.role === "admin") {
-        router.push("/admin")
+        router.push("/admin");
       } else {
-        router.push("/dashboard")
+        router.push("/dashboard");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Authentication failed")
+      setError(err instanceof Error ? err.message : "Authentication failed");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -62,10 +73,12 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <h2 className="text-4xl font-bold mb-6">Enterprise Banking Security</h2>
+          <h2 className="text-4xl font-bold mb-6">
+            Enterprise Banking Security
+          </h2>
           <p className="text-lg opacity-90 mb-8 leading-relaxed">
-            Experience banking with advanced zero-trust architecture. Every access is verified, every device is
-            validated.
+            Experience banking with advanced zero-trust architecture. Every
+            access is verified, every device is validated.
           </p>
           <div className="space-y-4">
             <div className="flex gap-3">
@@ -74,7 +87,9 @@ export default function LoginPage() {
               </div>
               <div>
                 <p className="font-semibold">Real-Time Risk Assessment</p>
-                <p className="text-sm opacity-75">Continuous device posture monitoring</p>
+                <p className="text-sm opacity-75">
+                  Continuous device posture monitoring
+                </p>
               </div>
             </div>
             <div className="flex gap-3">
@@ -92,13 +107,17 @@ export default function LoginPage() {
               </div>
               <div>
                 <p className="font-semibold">Adaptive Authentication</p>
-                <p className="text-sm opacity-75">Context-aware security controls</p>
+                <p className="text-sm opacity-75">
+                  Context-aware security controls
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        <p className="text-sm opacity-75">© 2025 SecureBank. All rights reserved.</p>
+        <p className="text-sm opacity-75">
+          © 2025 SecureBank. All rights reserved.
+        </p>
       </div>
 
       {/* Right Panel - Login Form */}
@@ -106,13 +125,18 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="mb-8">
             <h3 className="text-3xl font-bold mb-2">Welcome Back</h3>
-            <p className="text-muted-foreground">Sign in to your banking account</p>
+            <p className="text-muted-foreground">
+              Sign in to your banking account
+            </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             {/* Email Field */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium mb-2"
+              >
                 Username
               </label>
               <input
@@ -128,7 +152,10 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium mb-2"
+              >
                 Password
               </label>
               <div className="relative">
@@ -191,5 +218,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

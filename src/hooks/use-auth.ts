@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { User } from "@/lib/types";
+import { clearDeviceContext } from "@/lib/auth-context";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -16,7 +17,6 @@ export function useAuth() {
         const storedToken = localStorage.getItem("auth_token");
         const userJson = localStorage.getItem("user");
         console.log("Checking auth with token:", storedToken);
-
 
         if (storedToken && userJson) {
           const parsedUser = JSON.parse(userJson);
@@ -43,6 +43,7 @@ export function useAuth() {
   }, []);
 
   const logout = () => {
+    clearDeviceContext();
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user");
     setUser(null);
