@@ -185,22 +185,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Demo Credentials */}
-            <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg text-sm">
-              <p className="font-medium text-primary mb-2">Demo Credentials:</p>
-              <ul className="text-muted-foreground space-y-1">
-                <li>
-                  <strong>User:</strong> john.doe@company.com
-                </li>
-                <li>
-                  <strong>Admin:</strong> jane.smith@company.com
-                </li>
-                <li>
-                  <strong>Password:</strong> password
-                </li>
-              </ul>
-            </div>
-
             {/* Submit Button */}
             <button
               type="submit"

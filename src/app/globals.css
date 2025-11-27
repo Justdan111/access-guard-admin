@@ -139,3 +139,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .risk-bar-container {
+    @apply relative w-16 h-2 rounded-full bg-gray-200 overflow-hidden;
+  }
+
+  .risk-bar {
+    @apply h-2 rounded-full absolute left-0 top-0;
+    width: calc(var(--risk-width, 50%) + 0px);
+  }
+}

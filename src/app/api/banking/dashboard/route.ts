@@ -12,15 +12,29 @@ export async function GET(request: Request) {
       });
     }
 
-    // Forward to upstream with Authorization header
+    // Build headers for upstream request
+    const upstreamHeaders: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+
+    // Forward device context headers from client if present
+    const devicePosture = request.headers.get("x-device-posture");
+    const accessContext = request.headers.get("x-access-context");
+
+    if (devicePosture) {
+      upstreamHeaders["x-device-posture"] = devicePosture;
+    }
+    if (accessContext) {
+      upstreamHeaders["x-access-context"] = accessContext;
+    }
+
+    // Forward to upstream with Authorization header + device context
     const upstream = await fetch(
       "https://acessguard.onrender.com/api/banking/dashboard",
       {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: upstreamHeaders,
       }
     );
 
@@ -45,7 +59,7 @@ export async function GET(request: Request) {
       status: upstream.status,
       headers: resHeaders,
     });
-  } catch (err) {
+  } catch {
     return new Response(JSON.stringify({ error: "Dashboard proxy failed" }), {
       status: 502,
       headers: { "Content-Type": "application/json" },

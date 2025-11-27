@@ -8,17 +8,23 @@
 export interface DevicePosture {
   diskEncrypted: boolean;
   antivirus: boolean;
-  osVersion: string;
-  os: string;
-  isJailbroken: boolean;
-  fingerprint: string;
-  isKnownDevice: boolean;
-  browser: string;
-  screenResolution: string;
-  lastSecurityUpdate: string;
+  osVersion?: string;
+  isJailbroken?: boolean;
+  lastSecurityUpdate?: string;
 }
 
-export async function collectDevicePosture(): Promise<Partial<DevicePosture>> {
+export interface AccessContext {
+  impossibleTravel: boolean;
+  country: string;
+  city?: string;
+  timezone?: string;
+  ipReputation?: number;
+  isVPN?: boolean;
+  isTor?: boolean;
+  accessTime?: string;
+}
+
+export async function collectDevicePosture(): Promise<DevicePosture> {
   // Check for manual overrides (for demo purposes)
   const overrides = JSON.parse(
     typeof window !== "undefined"
@@ -31,81 +37,39 @@ export async function collectDevicePosture(): Promise<Partial<DevicePosture>> {
 
   // Detect Operating System
   const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  let os = "Unknown";
   let osVersion = "Unknown";
 
   if (userAgent.includes("Windows NT 10.0")) {
-    os = "Windows";
     osVersion = "Windows 10/11";
   } else if (userAgent.includes("Windows NT 6.3")) {
-    os = "Windows";
     osVersion = "Windows 8.1";
   } else if (userAgent.includes("Windows NT 6.2")) {
-    os = "Windows";
     osVersion = "Windows 8";
   } else if (userAgent.includes("Windows NT 6.1")) {
-    os = "Windows";
     osVersion = "Windows 7";
   } else if (userAgent.includes("Mac OS X")) {
-    os = "MacOS";
     const match = userAgent.match(/Mac OS X (\d+[._]\d+)/);
     osVersion = match ? `MacOS ${match[1].replace("_", ".")}` : "MacOS";
   } else if (userAgent.includes("Linux")) {
-    os = "Linux";
     osVersion = "Linux";
   } else if (userAgent.includes("Android")) {
-    os = "Android";
     const match = userAgent.match(/Android (\d+(\.\d+)?)/);
     osVersion = match ? `Android ${match[1]}` : "Android";
   } else if (userAgent.includes("iPhone") || userAgent.includes("iPad")) {
-    os = "iOS";
     const match = userAgent.match(/OS (\d+[._]\d+)/);
     osVersion = match ? `iOS ${match[1].replace("_", ".")}` : "iOS";
   }
 
-  // Detect Browser
-  const browser = detectBrowser();
-
-  // Generate Device Fingerprint
-  const fingerprint = await generateDeviceFingerprint();
-
-  // Check if device is known
-  const knownDevices = JSON.parse(
-    typeof window !== "undefined"
-      ? localStorage.getItem("knownDevices") || "[]"
-      : "[]"
-  );
-  const isKnownDevice = knownDevices.includes(fingerprint);
-
-  // If new device, add to known devices
-  if (!isKnownDevice) {
-    knownDevices.push(fingerprint);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("knownDevices", JSON.stringify(knownDevices));
-    }
-  }
-
-  // Screen Resolution
-  const screenResolution =
-    typeof window !== "undefined"
-      ? `${window.screen.width}x${window.screen.height}`
-      : "Unknown";
-
   // These cannot be reliably detected in browser, so we make educated guesses
-  const diskEncrypted = guessDiskEncryption(os);
-  const antivirus = guessAntivirusStatus(os);
+  const diskEncrypted = guessDiskEncryption(userAgent);
+  const antivirus = guessAntivirusStatus(userAgent);
   const isJailbroken = detectJailbreak();
 
   return {
     diskEncrypted,
     antivirus,
     osVersion,
-    os,
     isJailbroken,
-    fingerprint,
-    isKnownDevice,
-    browser,
-    screenResolution,
     lastSecurityUpdate: new Date().toISOString(),
   };
 }
@@ -114,21 +78,7 @@ export async function collectDevicePosture(): Promise<Partial<DevicePosture>> {
 // ACCESS CONTEXT COLLECTION
 // ============================================
 
-export interface AccessContext {
-  impossibleTravel: boolean;
-  country: string;
-  city: string;
-  latitude?: number;
-  longitude?: number;
-  timezone: string;
-  isVPN: boolean;
-  isTor: boolean;
-  ipAddress: string;
-  ipReputation: number;
-  accessTime: string;
-}
-
-export async function collectAccessContext(): Promise<Partial<AccessContext>> {
+export async function collectAccessContext(): Promise<AccessContext> {
   // Check for manual overrides (for demo purposes)
   const overrides = JSON.parse(
     typeof window !== "undefined"
@@ -172,13 +122,10 @@ export async function collectAccessContext(): Promise<Partial<AccessContext>> {
   return {
     impossibleTravel,
     country: ipInfo?.country_code || "UNKNOWN",
-    city: ipInfo?.city || "Unknown",
-    latitude: coords.latitude,
-    longitude: coords.longitude,
+    city: ipInfo?.city,
     timezone,
     isVPN,
     isTor: ipInfo?.tor || false,
-    ipAddress: ipInfo?.ip || "Unknown",
     ipReputation: ipInfo?.threat?.is_threat ? 30 : 85,
     accessTime: new Date().toISOString(),
   };
@@ -191,61 +138,6 @@ export async function collectAccessContext(): Promise<Partial<AccessContext>> {
 /**
  * Generate unique device fingerprint
  */
-async function generateDeviceFingerprint(): Promise<string> {
-  if (typeof window === "undefined") return "server-side";
-
-  // Check if already generated
-  const stored = localStorage.getItem("deviceFingerprint");
-  if (stored) return stored;
-
-  // Canvas fingerprinting
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (ctx) {
-    ctx.textBaseline = "top";
-    ctx.font = "14px Arial";
-    ctx.fillStyle = "#f00";
-    ctx.fillRect(0, 0, 100, 100);
-    ctx.fillStyle = "#00f";
-    ctx.fillText("Browser Fingerprint 🔐", 2, 2);
-  }
-  const canvasData = canvas.toDataURL();
-
-  // Combine multiple signals
-  const components = [
-    canvasData,
-    navigator.userAgent,
-    navigator.language,
-    screen.width,
-    screen.height,
-    screen.colorDepth,
-    new Date().getTimezoneOffset(),
-    navigator.hardwareConcurrency || "unknown",
-    (navigator as any).deviceMemory || "unknown",
-    navigator.platform,
-    navigator.maxTouchPoints || 0,
-  ].join("|");
-
-  // Simple hash (for production, use a proper hash library)
-  const fingerprint = btoa(components).substring(0, 32);
-
-  localStorage.setItem("deviceFingerprint", fingerprint);
-  return fingerprint;
-}
-
-/**
- * Detect browser
- */
-function detectBrowser(): string {
-  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  if (ua.includes("Firefox/")) return "Firefox";
-  if (ua.includes("Edg/")) return "Edge";
-  if (ua.includes("Chrome/") && !ua.includes("Edg/")) return "Chrome";
-  if (ua.includes("Safari/") && !ua.includes("Chrome/")) return "Safari";
-  if (ua.includes("Opera/") || ua.includes("OPR/")) return "Opera";
-  return "Unknown";
-}
-
 /**
  * Guess disk encryption based on OS
  */
