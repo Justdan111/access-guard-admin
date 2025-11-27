@@ -5,7 +5,7 @@ import { HRPortalContent } from "@/components/dashboard/hr-portal"
 
 export default function HRPortalPage() {
   return (
-    <ProtectedRoute requiredRole="user">
+    <ProtectedRoute requiredRole="banker">
       <div className="min-h-screen bg-background">
           <main className="flex-1 overflow-auto">
               <div className="mb-8">

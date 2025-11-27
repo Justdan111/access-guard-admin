@@ -5,7 +5,7 @@ import { SettingsContent } from "@/components/dashboard/settings"
 
 export default function SettingsPage() {
   return (
-    <ProtectedRoute requiredRole="user">
+    <ProtectedRoute requiredRole="banker">
       <div className="min-h-screen bg-background">
           <main className="flex-1 overflow-auto">
               <div className="mb-8">

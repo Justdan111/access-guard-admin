@@ -47,28 +47,28 @@ export function DashboardHeader() {
 
     let isMounted = true
 
-    const fetchAssessment = async () => {
-      try {
-        const resp = await fetch('/api/risk-assessment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id }),
-        })
+    // const fetchAssessment = async () => {
+    //   try {
+    //     const resp = await fetch('/api/risk-assessment', {
+    //       method: 'POST',
+    //       headers: { 'Content-Type': 'application/json' },
+    //       body: JSON.stringify({ userId: user.id }),
+    //     })
 
-        if (!resp.ok) return
-        const data: Assessment = await resp.json()
-        if (!isMounted) return
+    //     if (!resp.ok) return
+    //     const data: Assessment = await resp.json()
+    //     if (!isMounted) return
 
-        setAssessment(data)
-        if (data.riskLevel === 'medium' || data.riskLevel === 'high') {
-          setShowRiskModal(true)
-        }
-      } catch (err) {
-        console.error('Failed to fetch assessment', err)
-      }
-    }
+    //     setAssessment(data)
+    //     if (data.riskLevel === 'medium' || data.riskLevel === 'high') {
+    //       setShowRiskModal(true)
+    //     }
+    //   } catch (err) {
+    //     console.error('Failed to fetch assessment', err)
+    //   }
+    // }
 
-    fetchAssessment()
+    // fetchAssessment()
 
     return () => {
       isMounted = false
